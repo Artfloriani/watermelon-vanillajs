@@ -37,15 +37,14 @@ function animate() {
 
   clearCanvas();
 
-  // Draw and move fruits
-  for (let i = 0; i < fruits.length; i++) {
-    const fruit = fruits[i];
-
-    drawFruit(fruit);
+  for (let fruit of fruits) {
     // Simple gravity
-    applyPhysics(fruit);
+    worldPhysics(fruit);
 
     checkCollisions(fruit);
+
+    // draw
+    drawFruit(fruit);
   }
 }
 
@@ -53,9 +52,22 @@ function checkCollisions(f: Fruit) {
   for (let i = 0; i < fruits.length; i++) {
     const other = fruits[i];
     if (f !== other && f.collidesWith(other)) {
+      if (f.color === other.color) {
+        combineFruits(f, other);
+      }
       resolveCollision(f, other);
     }
   }
+}
+
+function combineFruits(f1: Fruit, f2: Fruit) {
+  f1.x = (f1.x + f2.x) / 2;
+  f1.y = (f1.y + f2.y) / 2;
+  f1.dy = (f1.dy + f2.dy) / 2;
+  f1.dx = (f1.dx + f2.dx) / 2;
+  f1.type++;
+  f1.updateType();
+  fruits = fruits.filter((f) => f !== f2);
 }
 
 function clearCanvas() {
@@ -72,7 +84,7 @@ function drawFruit(f: Fruit) {
   ctx.closePath();
 }
 
-function applyPhysics(f: Fruit) {
+function worldPhysics(f: Fruit) {
   f.dy += gravity;
   f.y += f.dy;
   f.x += f.dx;
