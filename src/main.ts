@@ -4,15 +4,37 @@ import { Fruit } from "./fruit.ts";
 
 import * as p2 from "p2-es";
 
+// calculate the proportion of the screen width vs height
+// and use it to scale the canvas
+const container = document.getElementById("app");
+let wWidth = window.innerWidth,
+  wHeight = window.innerHeight;
+if (container) {
+  wWidth = container.clientWidth;
+  wHeight = container.clientHeight;
+  console.log("wes", wWidth, wHeight);
+}
+
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
-    <canvas id="gameCanvas" width="400" style="border: 1px solid red;" height="400"></canvas>
+    <canvas id="gameCanvas" style="border: 1px solid red;"></canvas>
 `;
 
 // Initialize canvas and context
 const canvas: HTMLCanvasElement = <HTMLCanvasElement>(
   document.getElementById("gameCanvas")
 );
+
+const image: any = document.getElementById("0");
+
 const ctx = canvas?.getContext("2d");
+const rect = canvas.getBoundingClientRect();
+
+const canvasWidth = canvas.clientWidth;
+const canvasHeight = canvas.clientHeight;
+
+canvas.height = canvasHeight;
+canvas.width = canvasWidth;
+
 let w: number, h: number;
 var scaleX = 50,
   scaleY = -50;
@@ -23,11 +45,44 @@ let world: p2.World;
 let fruits: Fruit[] = [];
 let markedForDeletion: Fruit[] = [];
 
-// Click event to drop fruit
-canvas.addEventListener("click", function (event) {
-  let x = event.clientX - canvas.offsetLeft;
-  let y = event.clientY - canvas.offsetTop;
-  dropFruit(x, y);
+// Next fruit logic
+var lastMove: TouchEvent | null = null;
+var nextFruit: Fruit | null;
+var touchStart: TouchEvent | null = null;
+
+// Save the touchstart to always have a position
+canvas.addEventListener("touchstart", (event) => {
+  lastMove = event;
+  touchStart = event;
+});
+
+// Override with touchmove, which is triggered only on move
+canvas.addEventListener("touchmove", (event) => {
+  if (nextFruit == null) {
+    touchStart = event;
+  }
+  lastMove = event;
+  const rect = canvas.getBoundingClientRect();
+  if (nextFruit && touchStart) {
+    nextFruit.x =
+      (event.touches[0].clientX - touchStart.touches[0].clientX) / scaleX;
+    nextFruit?.updatePosition();
+  }
+});
+
+canvas.addEventListener("touchend", () => {
+  if (lastMove) {
+    const touch = lastMove.touches[0];
+    const x = touch.clientX;
+    const y = touch.clientY;
+    if (nextFruit && nextFruit.body) {
+      nextFruit.body.wakeUp();
+      nextFruit = null;
+      setTimeout(() => {
+        nextFruit = createFruit(canvasWidth / 2 + Math.random() * 5, 0);
+      }, 500);
+    }
+  }
 });
 
 // Convert a canvas coordiante to physics coordinate
@@ -42,13 +97,45 @@ function getPhysicsCoord(px: number, py: number) {
   return [x, y];
 }
 
-// Function to drop a fruit
-function dropFruit(x: number, y: number) {
-  const newFruit = new Fruit(x, y);
+function createFruit(x: number, y: number) {
+  const posX = (x - w / 2) / scaleX;
+  const posY = (y - h / 2) / scaleY;
+  const position = [posX, posY];
+  const newFruit = new Fruit(position[0], position[1]);
 
   const circleShape = new p2.Circle({ radius: newFruit.radius });
-  const position = getPhysicsCoord(x + newFruit.radius * scaleX, y);
-  const circleBody = new p2.Body({ mass: 1, position });
+  const circleBody = new p2.Body({
+    mass: newFruit.mass,
+    position,
+    damping: 0.85,
+    collisionResponse: true,
+    ccdSpeedThreshold: 0,
+    allowSleep: true,
+  });
+
+  circleBody.sleep();
+  circleBody.addShape(circleShape);
+  world.addBody(circleBody);
+
+  newFruit.body = circleBody;
+  newFruit.shape = circleShape;
+  fruits.push(newFruit);
+  return newFruit;
+}
+
+// Function to drop a fruit
+function dropFruit(x: number, y: number) {
+  const position = getPhysicsCoord(x, y);
+  const newFruit = new Fruit(position[0], position[1]);
+
+  const circleShape = new p2.Circle({ radius: newFruit.radius });
+  const circleBody = new p2.Body({
+    mass: 3,
+    position,
+    damping: 0.75,
+    collisionResponse: true,
+    ccdSpeedThreshold: 0,
+  });
   circleBody.addShape(circleShape);
   world.addBody(circleBody);
 
@@ -57,24 +144,27 @@ function dropFruit(x: number, y: number) {
   fruits.push(newFruit);
 }
 
-let planeShape: p2.Shape, planeBody: p2.Body | null;
+let planes: { planeShape: p2.Shape; planeBody: p2.Body }[] = [];
 
 function init() {
   if (canvas === null || ctx === null) return;
   // Init canvas
-  w = canvas.width;
-  h = canvas.height;
+  w = canvasWidth;
+  h = canvasHeight;
 
   ctx.lineWidth = 0.05;
 
   // Init p2.js
   world = new p2.World();
 
-  // Add a plane
-  planeShape = new p2.Plane();
-  planeBody = new p2.Body({ position: [0, -4] });
-  planeBody.addShape(planeShape);
-  world.addBody(planeBody);
+  world.defaultContactMaterial.friction = 0.9;
+  world.defaultContactMaterial.restitution = 0.25;
+
+  const y = canvasHeight / 2 / scaleY;
+  const x = canvasWidth / 2 / scaleX;
+  createPlane(0, y);
+  createPlane(x, 0, { angle: 1.5708, type: p2.Body.STATIC });
+  createPlane(-x, 0, { angle: -1.5708, type: p2.Body.STATIC });
 
   world.on("beginContact", function (event) {
     const shapeA: p2.Circle = event.shapeA,
@@ -83,6 +173,19 @@ function init() {
       checkMerge(shapeA, shapeB);
     }
   });
+
+  nextFruit = createFruit(canvasWidth / 2, 0);
+}
+
+function createPlane(x: number, y: number, opts: p2.BodyOptions = {}) {
+  let planeShape: p2.Shape, planeBody: p2.Body | null;
+
+  // Add a plane
+  planeShape = new p2.Plane();
+  planeBody = new p2.Body({ position: [x, y], ...opts });
+  planeBody.addShape(planeShape);
+  world.addBody(planeBody);
+  planes.push({ planeShape, planeBody });
 }
 
 function render() {
@@ -97,12 +200,23 @@ function render() {
   ctx.translate(w / 2, h / 2); // Translate to the center
   ctx.scale(scaleX, scaleY); // Zoom in and flip y axis
 
+  if (nextFruit) {
+    ctx.beginPath();
+    ctx.moveTo(nextFruit.x, nextFruit.y);
+    ctx.lineTo(nextFruit.x, canvasHeight / scaleY);
+    ctx.strokeStyle = "#FFFFFF80";
+    ctx.lineWidth = 0.12;
+    ctx.stroke();
+  }
+
   for (let fruit of fruits) {
     drawFruit(fruit);
   }
 
   // Draw all bodies
-  drawPlane();
+  planes.forEach((plane) => {
+    drawPlane(plane);
+  });
 
   // Restore transform
   ctx.restore();
@@ -119,9 +233,14 @@ function animate(time: number) {
   var dt = lastTime ? (time - lastTime) / 1000 : 0;
   dt = Math.min(1 / 10, dt);
   lastTime = time;
-
   // Move physics bodies forward in time
   world.step(timeStep, dt, maxSubSteps);
+  world.gravity[1] = -30;
+  world.setGlobalStiffness(1e30);
+
+  for (let fruit of fruits) {
+    fruit.grow(dt);
+  }
 
   for (let fruit of markedForDeletion) {
     if (fruit.body) {
@@ -144,25 +263,59 @@ function drawFruit(f: Fruit) {
   ctx.fillStyle = f.color;
   ctx.fill();
   ctx.closePath();
+  if (image) {
+    // save the unrotated context of the canvas so we can restore it later
+    // the alternative is to untranslate & unrotate after drawing
+    ctx.save();
+
+    // move to the center of the canvas
+    ctx.translate(x, y);
+
+    // rotate the canvas to the specified degrees
+    ctx.rotate(f.body.angle);
+
+    // we’re done with the rotating so restore the unrotated context
+    ctx.drawImage(image, -radius, -radius, radius * 2, radius * 2);
+    ctx.restore();
+  }
 }
 
-function drawPlane() {
-  if (planeBody == null) return;
+function drawPlane(p: { planeShape: p2.Shape; planeBody: p2.Body }) {
+  if (p == null) return;
   if (ctx == null) return;
-  var y = planeBody.interpolatedPosition[1];
+  var y = p.planeBody.interpolatedPosition[1];
   ctx.moveTo(-w, y);
   ctx.lineTo(w, y);
-  ctx.stroke();
 }
 
 function checkMerge(shapeA: p2.Circle, shapeB: p2.Circle) {
-  if (shapeA.radius == shapeB.radius) {
-    const fruitA = fruits.find((f) => f.shape === shapeA);
-    const fruitB = fruits.find((f) => f.shape === shapeB);
-    if (fruitA && fruitB) {
+  const fruitA = fruits.find((f) => f.shape === shapeA);
+  const fruitB = fruits.find((f) => f.shape === shapeB);
+  if (fruitA?.color == fruitB?.color) {
+    if (fruitA && fruitB && fruitA.body && fruitB.body) {
+      world.disableBodyCollision(fruitA.body, fruitB.body);
+      fruitB?.evolve();
+
       markedForDeletion.push(fruitA);
     }
+    //
+
+    if (fruitA && fruitB) {
+      // markedForDeletion.push(fruitA);
+    }
   }
+}
+
+function findMidPoint(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number
+): { x: number; y: number } {
+  let midX = (x1 + x2) / 2;
+  let midY = (y1 + y2) / 2;
+
+  return { x: midX, y: midY };
 }
 
 init();
