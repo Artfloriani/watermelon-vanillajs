@@ -5,11 +5,11 @@ export class Fruit {
   constructor(
     public x: number,
     public y: number,
+    public type = -1,
     public radius: number = 0.3,
     public previousRadius: number = 0.3,
     public targetRadius: number = 0.3,
     public color: string = "green",
-    public type = 0,
     public body?: p2.Body,
     public shape?: p2.Circle,
     public mass: number = 1
@@ -20,14 +20,16 @@ export class Fruit {
     this.targetRadius = this.baseRadius;
     this.previousRadius = this.baseRadius;
 
-    if (chance < 5) {
-      this.type = 0;
-    } else if (chance < 9) {
-      this.type = 1;
-    } else if (chance < 13) {
-      this.type = 2;
-    } else {
-      this.type = 3;
+    if (this.type === -1) {
+      if (chance < 5) {
+        this.type = 0;
+      } else if (chance < 9) {
+        this.type = 1;
+      } else if (chance < 13) {
+        this.type = 2;
+      } else {
+        this.type = 3;
+      }
     }
 
     this.updateType();

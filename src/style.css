@@ -14,7 +14,7 @@ body {
   width: 100dvw;
   min-height: 100dvh;
   justify-content: center;
-  align-items: center;
+  align-items:center;
   margin: 0;
 
   background-image: linear-gradient(
@@ -25,15 +25,39 @@ body {
     #DEC484 75%,
     #DEC484
   );
+
+  background-image: url('bg.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+#resetButton {
+  align-self: flex-end;
+  margin-bottom: 10dvh;
+  margin-right: 0;
+  background-color: #fae9c3;
+
+  box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px;
 }
 
 #app {
-  max-width: 1280px;
   width: 80dvw;
+  max-width: 60dvh;
   height: 80dvh;
+  max-height: 106dvw;
   padding: 0rem;
   margin-top: 0px;
   text-align: center;
+
+
+  
 }
 canvas {
   width: 100%;
@@ -41,11 +65,13 @@ canvas {
 }
 
 #gameCanvas {
-  border-left: 3px solid #5E412F;
-  border-bottom: 3px solid #5E412F;
-  border-right: 3px solid #5E412F;
-  background-color: #ebe9c3;
-  
+
+  background-color: #fae9c3;
+
+  border: 1px solid rgba(50,50,93,0.25);
+
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 30px 60px -12px inset, rgba(0, 0, 0, 0.3) 0px 18px 36px -18px inset;
+
 }
 
 .logo {

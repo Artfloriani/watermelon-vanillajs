@@ -106,14 +106,25 @@ canvas.addEventListener("touchend", () => {
   return [x, y];
 } */
 
-function createFruit(x: number, y: number) {
-  const posX = (x - w / 2) / scaleX;
-  const posY = (y - h / 2) / scaleY;
+function createFruit(
+  x: number,
+  y: number,
+  skipConversion = false,
+  type: number = -1
+) {
+  let posX = x;
+  let posY = y;
+  if (!skipConversion) {
+    posX = (x - w / 2) / scaleX;
+    posY = (y - h / 2) / scaleY;
+  }
   const position = [posX, posY];
-  const newFruit = new Fruit(position[0], position[1]);
+  const newFruit = new Fruit(position[0], position[1], type);
 
-  newFruit.y = (newFruit.radius * scaleX - h / 2) / scaleY;
-  position[1] = newFruit.y;
+  if (!skipConversion) {
+    newFruit.y = (newFruit.radius * scaleX - h / 2) / scaleY;
+    position[1] = newFruit.y;
+  }
 
   const circleShape = new p2.Circle({ radius: newFruit.radius });
   const circleBody = new p2.Body({
@@ -125,7 +136,9 @@ function createFruit(x: number, y: number) {
     allowSleep: true,
   });
 
-  circleBody.sleep();
+  if (!skipConversion) {
+    circleBody.sleep();
+  }
   circleBody.addShape(circleShape);
   world.addBody(circleBody);
 
@@ -311,7 +324,15 @@ function checkMerge(shapeA: p2.Circle, shapeB: p2.Circle) {
   const fruitB = fruits.find((f) => f.shape === shapeB);
   if (fruitA?.type == fruitB?.type) {
     if (fruitA && fruitB && fruitA.body && fruitB.body) {
-      fruitB?.evolve();
+      const [posX, posY] = fruitB.body.position;
+      const { type } = fruitB;
+
+      setTimeout(() => {
+        const newFruit = createFruit(posX, posY, true, type);
+        newFruit.evolve();
+      });
+
+      markedForDeletion.push(fruitB);
       markedForDeletion.push(fruitA);
     }
     //
@@ -333,6 +354,18 @@ function checkMerge(shapeA: p2.Circle, shapeB: p2.Circle) {
 
   return { x: midX, y: midY };
 } */
+
+document
+  .getElementById("resetButton")
+  ?.addEventListener("click", () => reset());
+
+function reset() {
+  for (let fruit of fruits) {
+    if (fruit.body && fruit !== nextFruit) {
+      markedForDeletion.push(fruit);
+    }
+  }
+}
 
 init();
 requestAnimationFrame(animate);
