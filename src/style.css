@@ -18,7 +18,7 @@
 * {
   touch-action: manipulation;
   overflow: hidden;
-  outline-color: black;
+  user-select: none; /* Standard syntax */
   outline: 0;
 }
 

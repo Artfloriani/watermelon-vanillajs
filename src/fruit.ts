@@ -114,7 +114,7 @@ export class Fruit {
         // Handle default case if needed
         break;
     }
-    this.mass = this.targetRadius / 0.2;
+    this.mass = (this.targetRadius * this.targetRadius) / 0.2;
     if (this.body) {
       this.body.mass = this.mass;
       this.body.updateMassProperties();
