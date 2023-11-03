@@ -1,4 +1,6 @@
 :root {
+
+  font-family:'Courier New', Courier, monospace;
   color: rgba(255, 255, 255, 0.87);
   background-color: #ebe9c3;
 
@@ -7,6 +9,17 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+
+  overflow: hidden;
+
+  
+}
+
+* {
+  touch-action: manipulation;
+  overflow: hidden;
+  outline-color: black;
+  outline: 0;
 }
 
 body {
@@ -43,8 +56,15 @@ body {
   margin-bottom: 10dvh;
   margin-right: 0;
   background-color: #fae9c3;
+  
+
+  color: black;
 
   box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px;
+  transition: box-shadow 0.25s;
+}
+#resetButton:active {
+  box-shadow: unset;
 }
 
 #app {
@@ -62,6 +82,8 @@ body {
 canvas {
   width: 100%;
   height: 100%;
+
+  touch-action: manipulation;
 }
 
 #gameCanvas {
@@ -69,31 +91,13 @@ canvas {
   background-color: #fae9c3;
 
   border: 1px solid rgba(50,50,93,0.25);
+  border-radius: 10px;
 
   box-shadow: rgba(50, 50, 93, 0.25) 0px 30px 60px -12px inset, rgba(0, 0, 0, 0.3) 0px 18px 36px -18px inset;
 
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vanilla:hover {
-  filter: drop-shadow(0 0 2em #3178c6aa);
-}
 
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-}
 
 button {
   border-radius: 8px;
@@ -105,12 +109,5 @@ button {
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
 }
 

@@ -23,17 +23,18 @@ const canvas: HTMLCanvasElement = <HTMLCanvasElement>(
   document.getElementById("gameCanvas")
 );
 
-const image0: any = document.getElementById("0");
-const image1: any = document.getElementById("1");
-const image2: any = document.getElementById("2");
-const image3: any = document.getElementById("3");
-const image4: any = document.getElementById("4");
-const images = [image0, image1, image2, image3, image4];
+const numImages = 10;
+const images: any[] = [];
+for (let i = 0; i < numImages; i++) {
+  const image: any = document.getElementById(i.toString());
+  images.push(image);
+}
 
 const ctx = canvas?.getContext("2d");
 
 if (ctx) {
-  ctx.imageSmoothingEnabled = false;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
 }
 
 const canvasWidth = canvas.clientWidth;
@@ -58,7 +59,7 @@ var nextFruit: Fruit | null;
 var touchStart: TouchEvent | null = null;
 
 // Save the touchstart to always have a position
-canvas.addEventListener("touchstart", (event) => {
+document.addEventListener("touchstart", (event) => {
   lastMove = event;
   touchStart = event;
   if (nextFruit && touchStart) {
@@ -70,7 +71,7 @@ canvas.addEventListener("touchstart", (event) => {
 });
 
 // Override with touchmove, which is triggered only on move
-canvas.addEventListener("touchmove", (event) => {
+document.addEventListener("touchmove", (event) => {
   if (nextFruit == null) {
     touchStart = event;
   }
@@ -82,7 +83,7 @@ canvas.addEventListener("touchmove", (event) => {
   }
 });
 
-canvas.addEventListener("touchend", () => {
+document.addEventListener("touchend", () => {
   if (lastMove) {
     if (nextFruit && nextFruit.body) {
       nextFruit.body.wakeUp();
@@ -229,8 +230,8 @@ function render() {
     ctx.beginPath();
     ctx.moveTo(nextFruit.x, nextFruit.y);
     ctx.lineTo(nextFruit.x, canvasHeight / scaleY);
-    ctx.strokeStyle = "#FFFFFF80";
-    ctx.lineWidth = 0.12;
+    ctx.strokeStyle = "#FFFFFF60";
+    ctx.lineWidth = 0.1;
     ctx.stroke();
   }
 
@@ -280,14 +281,14 @@ function animate(time: number) {
 
 function drawFruit(f: Fruit) {
   if (ctx == null || !f.body || !f.shape) return;
-  ctx.beginPath();
+  // ctx.beginPath();
   const x = f.body.interpolatedPosition[0],
     y = f.body.interpolatedPosition[1],
     radius = f.shape.radius;
-  ctx.arc(x, y, radius, 0, Math.PI * 2);
-  ctx.fillStyle = f.color;
-  ctx.fill();
-  ctx.closePath();
+  // ctx.arc(x, y, radius, 0, Math.PI * 2);
+  // ctx.fillStyle = f.color;
+  // ctx.fill();
+  // ctx.closePath();
   if (images.length > 0) {
     // save the unrotated context of the canvas so we can restore it later
     // the alternative is to untranslate & unrotate after drawing
@@ -357,9 +358,9 @@ function checkMerge(shapeA: p2.Circle, shapeB: p2.Circle) {
 
 document
   .getElementById("resetButton")
-  ?.addEventListener("click", () => reset());
+  ?.addEventListener("click", (ev) => reset(ev));
 
-function reset() {
+function reset(ev: any) {
   for (let fruit of fruits) {
     if (fruit.body && fruit !== nextFruit) {
       markedForDeletion.push(fruit);
