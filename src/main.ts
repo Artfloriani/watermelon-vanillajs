@@ -358,9 +358,9 @@ function checkMerge(shapeA: p2.Circle, shapeB: p2.Circle) {
 
 document
   .getElementById("resetButton")
-  ?.addEventListener("click", (ev) => reset(ev));
+  ?.addEventListener("click", () => reset());
 
-function reset(ev: any) {
+function reset() {
   for (let fruit of fruits) {
     if (fruit.body && fruit !== nextFruit) {
       markedForDeletion.push(fruit);
