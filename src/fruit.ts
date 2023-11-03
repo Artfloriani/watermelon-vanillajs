@@ -21,11 +21,11 @@ export class Fruit {
     this.previousRadius = this.baseRadius;
 
     if (this.type === -1) {
-      if (chance < 5) {
+      if (chance < 3) {
         this.type = 0;
-      } else if (chance < 9) {
+      } else if (chance < 7) {
         this.type = 1;
-      } else if (chance < 13) {
+      } else if (chance < 11) {
         this.type = 2;
       } else {
         this.type = 3;
