@@ -32,6 +32,10 @@ const images = [image0, image1, image2, image3, image4];
 
 const ctx = canvas?.getContext("2d");
 
+if (ctx) {
+  ctx.imageSmoothingEnabled = false;
+}
+
 const canvasWidth = canvas.clientWidth;
 const canvasHeight = canvas.clientHeight;
 
