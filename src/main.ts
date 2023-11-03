@@ -16,7 +16,7 @@ if (container) {
 }
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
-    <canvas id="gameCanvas" style="border: 1px solid red;"></canvas>
+    <canvas id="gameCanvas"></canvas>
 `;
 
 // Initialize canvas and context
@@ -24,7 +24,12 @@ const canvas: HTMLCanvasElement = <HTMLCanvasElement>(
   document.getElementById("gameCanvas")
 );
 
-const image: any = document.getElementById("0");
+const image0: any = document.getElementById("0");
+const image1: any = document.getElementById("1");
+const image2: any = document.getElementById("2");
+const image3: any = document.getElementById("3");
+const image4: any = document.getElementById("4");
+const images = [image0, image1, image2, image3, image4];
 
 const ctx = canvas?.getContext("2d");
 const rect = canvas.getBoundingClientRect();
@@ -54,6 +59,12 @@ var touchStart: TouchEvent | null = null;
 canvas.addEventListener("touchstart", (event) => {
   lastMove = event;
   touchStart = event;
+  if (nextFruit && touchStart) {
+    const rect = canvas.getBoundingClientRect();
+    nextFruit.x =
+      (touchStart.touches[0].clientX - rect.left - canvasWidth / 2) / scaleX;
+    nextFruit?.updatePosition();
+  }
 });
 
 // Override with touchmove, which is triggered only on move
@@ -62,7 +73,6 @@ canvas.addEventListener("touchmove", (event) => {
     touchStart = event;
   }
   lastMove = event;
-  const rect = canvas.getBoundingClientRect();
   if (nextFruit && touchStart) {
     nextFruit.x =
       (event.touches[0].clientX - touchStart.touches[0].clientX) / scaleX;
@@ -102,6 +112,9 @@ function createFruit(x: number, y: number) {
   const posY = (y - h / 2) / scaleY;
   const position = [posX, posY];
   const newFruit = new Fruit(position[0], position[1]);
+
+  newFruit.y = (newFruit.radius * scaleX - h / 2) / scaleY;
+  position[1] = newFruit.y;
 
   const circleShape = new p2.Circle({ radius: newFruit.radius });
   const circleBody = new p2.Body({
@@ -263,7 +276,7 @@ function drawFruit(f: Fruit) {
   ctx.fillStyle = f.color;
   ctx.fill();
   ctx.closePath();
-  if (image) {
+  if (images.length > 0) {
     // save the unrotated context of the canvas so we can restore it later
     // the alternative is to untranslate & unrotate after drawing
     ctx.save();
@@ -275,7 +288,13 @@ function drawFruit(f: Fruit) {
     ctx.rotate(f.body.angle);
 
     // we’re done with the rotating so restore the unrotated context
-    ctx.drawImage(image, -radius, -radius, radius * 2, radius * 2);
+    ctx.drawImage(
+      images[f.type % images.length],
+      -radius,
+      -radius,
+      radius * 2,
+      radius * 2
+    );
     ctx.restore();
   }
 }
@@ -291,11 +310,9 @@ function drawPlane(p: { planeShape: p2.Shape; planeBody: p2.Body }) {
 function checkMerge(shapeA: p2.Circle, shapeB: p2.Circle) {
   const fruitA = fruits.find((f) => f.shape === shapeA);
   const fruitB = fruits.find((f) => f.shape === shapeB);
-  if (fruitA?.color == fruitB?.color) {
+  if (fruitA?.type == fruitB?.type) {
     if (fruitA && fruitB && fruitA.body && fruitB.body) {
-      world.disableBodyCollision(fruitA.body, fruitB.body);
       fruitB?.evolve();
-
       markedForDeletion.push(fruitA);
     }
     //

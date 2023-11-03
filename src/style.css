@@ -16,6 +16,15 @@ body {
   justify-content: center;
   align-items: center;
   margin: 0;
+
+  background-image: linear-gradient(
+    45deg,
+    #E1A36F 25%,
+    transparent 25%,
+    transparent 75%,
+    #DEC484 75%,
+    #DEC484
+  );
 }
 
 #app {
@@ -29,6 +38,14 @@ body {
 canvas {
   width: 100%;
   height: 100%;
+}
+
+#gameCanvas {
+  border-left: 3px solid #5E412F;
+  border-bottom: 3px solid #5E412F;
+  border-right: 3px solid #5E412F;
+  background-color: #ebe9c3;
+  
 }
 
 .logo {
