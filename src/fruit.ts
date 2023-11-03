@@ -50,7 +50,7 @@ export class Fruit {
    * Use evolveTime to determine how fast the fruit should grow
    * consider that the game is running at 60fps
    */
-  grow(evolveTime: number) {
+  grow() {
     if (this.radius < this.targetRadius && this.shape) {
       this.radius += (this.targetRadius - this.previousRadius) / 8;
       this.shape.radius = this.radius;

@@ -1,5 +1,4 @@
 import "./style.css";
-import { setupCounter } from "./counter.ts";
 import { Fruit } from "./fruit.ts";
 
 import * as p2 from "p2-es";
@@ -32,7 +31,6 @@ const image4: any = document.getElementById("4");
 const images = [image0, image1, image2, image3, image4];
 
 const ctx = canvas?.getContext("2d");
-const rect = canvas.getBoundingClientRect();
 
 const canvasWidth = canvas.clientWidth;
 const canvasHeight = canvas.clientHeight;
@@ -82,9 +80,6 @@ canvas.addEventListener("touchmove", (event) => {
 
 canvas.addEventListener("touchend", () => {
   if (lastMove) {
-    const touch = lastMove.touches[0];
-    const x = touch.clientX;
-    const y = touch.clientY;
     if (nextFruit && nextFruit.body) {
       nextFruit.body.wakeUp();
       nextFruit = null;
@@ -96,7 +91,7 @@ canvas.addEventListener("touchend", () => {
 });
 
 // Convert a canvas coordiante to physics coordinate
-function getPhysicsCoord(px: number, py: number) {
+/* function getPhysicsCoord(px: number, py: number) {
   var rect = canvas.getBoundingClientRect();
   var x = px - rect.left;
   var y = py - rect.top;
@@ -105,7 +100,7 @@ function getPhysicsCoord(px: number, py: number) {
   y = (y - h / 2) / scaleY;
 
   return [x, y];
-}
+} */
 
 function createFruit(x: number, y: number) {
   const posX = (x - w / 2) / scaleX;
@@ -137,7 +132,7 @@ function createFruit(x: number, y: number) {
 }
 
 // Function to drop a fruit
-function dropFruit(x: number, y: number) {
+/* function dropFruit(x: number, y: number) {
   const position = getPhysicsCoord(x, y);
   const newFruit = new Fruit(position[0], position[1]);
 
@@ -155,7 +150,7 @@ function dropFruit(x: number, y: number) {
   newFruit.body = circleBody;
   newFruit.shape = circleShape;
   fruits.push(newFruit);
-}
+} */
 
 let planes: { planeShape: p2.Shape; planeBody: p2.Body }[] = [];
 
@@ -179,7 +174,7 @@ function init() {
   createPlane(x, 0, { angle: 1.5708, type: p2.Body.STATIC });
   createPlane(-x, 0, { angle: -1.5708, type: p2.Body.STATIC });
 
-  world.on("beginContact", function (event) {
+  world.on("beginContact", function (event: any) {
     const shapeA: p2.Circle = event.shapeA,
       shapeB: p2.Circle = event.shapeB;
     if (shapeA.radius !== undefined && shapeB.radius !== undefined) {
@@ -252,7 +247,7 @@ function animate(time: number) {
   world.setGlobalStiffness(1e30);
 
   for (let fruit of fruits) {
-    fruit.grow(dt);
+    fruit.grow();
   }
 
   for (let fruit of markedForDeletion) {
@@ -323,7 +318,7 @@ function checkMerge(shapeA: p2.Circle, shapeB: p2.Circle) {
   }
 }
 
-function findMidPoint(
+/* function findMidPoint(
   x1: number,
   y1: number,
   x2: number,
@@ -333,7 +328,7 @@ function findMidPoint(
   let midY = (y1 + y2) / 2;
 
   return { x: midX, y: midY };
-}
+} */
 
 init();
 requestAnimationFrame(animate);
