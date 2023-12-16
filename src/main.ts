@@ -11,7 +11,6 @@ let wWidth = window.innerWidth,
 if (container) {
   wWidth = container.clientWidth;
   wHeight = container.clientHeight;
-  console.log("wes", wWidth, wHeight);
 }
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
@@ -83,17 +82,37 @@ document.addEventListener("touchmove", (event) => {
   }
 });
 
-document.addEventListener("touchend", () => {
-  if (lastMove) {
-    if (nextFruit && nextFruit.body) {
-      nextFruit.body.wakeUp();
-      nextFruit = null;
-      setTimeout(() => {
-        nextFruit = createFruit(canvasWidth / 2 + Math.random() * 5, 0);
-      }, 500);
+document.addEventListener("mousemove", (event) => {
+  if (nextFruit) {
+    const rect = canvas.getBoundingClientRect();
+    const newPosX = (event.clientX - rect.left - canvasWidth / 2) / scaleX;
+    const xLimit = canvasWidth / scaleX / 2;
+    if (newPosX > -xLimit && newPosX < xLimit) {
+      nextFruit.x = (event.clientX - rect.left - canvasWidth / 2) / scaleX;
+      nextFruit?.updatePosition();
     }
   }
 });
+
+document.addEventListener("touchend", () => {
+  if (lastMove) {
+    dropFruit();
+  }
+});
+
+document.addEventListener("mouseup", () => {
+  dropFruit();
+});
+
+function dropFruit() {
+  if (nextFruit && nextFruit.body) {
+    nextFruit.body.wakeUp();
+    nextFruit = null;
+    setTimeout(() => {
+      nextFruit = createFruit(canvasWidth / 2 + Math.random() * 5, 0);
+    }, 500);
+  }
+}
 
 // Convert a canvas coordiante to physics coordinate
 /* function getPhysicsCoord(px: number, py: number) {
