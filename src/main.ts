@@ -8,6 +8,7 @@ import * as p2 from "p2-es";
 const container = document.getElementById("app");
 let wWidth = window.innerWidth,
   wHeight = window.innerHeight;
+
 if (container) {
   wWidth = container.clientWidth;
   wHeight = container.clientHeight;
@@ -36,11 +37,8 @@ if (ctx) {
   ctx.imageSmoothingQuality = "high";
 }
 
-const canvasWidth = canvas.clientWidth;
-const canvasHeight = canvas.clientHeight;
-
-canvas.height = canvasHeight;
-canvas.width = canvasWidth;
+let canvasWidth = canvas.clientWidth;
+let canvasHeight = canvas.clientHeight;
 
 let w: number, h: number;
 var scaleX = 50,
@@ -56,6 +54,21 @@ let markedForDeletion: Fruit[] = [];
 var lastMove: TouchEvent | null = null;
 var nextFruit: Fruit | null;
 var touchStart: TouchEvent | null = null;
+
+function afterPageLoad() {
+  canvasWidth = canvas.clientWidth;
+  canvasHeight = canvas.clientHeight;
+
+  canvas.height = canvasHeight;
+  canvas.width = canvasWidth;
+
+  init();
+  requestAnimationFrame(animate);
+}
+
+window.addEventListener("load", () => {
+  afterPageLoad();
+});
 
 // Save the touchstart to always have a position
 document.addEventListener("touchstart", (event) => {
@@ -386,6 +399,3 @@ function reset() {
     }
   }
 }
-
-init();
-requestAnimationFrame(animate);
