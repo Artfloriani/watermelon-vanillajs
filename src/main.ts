@@ -3,17 +3,6 @@ import { Fruit } from "./fruit.ts";
 
 import * as p2 from "p2-es";
 
-// calculate the proportion of the screen width vs height
-// and use it to scale the canvas
-const container = document.getElementById("app");
-let wWidth = window.innerWidth,
-  wHeight = window.innerHeight;
-
-if (container) {
-  wWidth = container.clientWidth;
-  wHeight = container.clientHeight;
-}
-
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
     <canvas id="gameCanvas"></canvas>
 `;
@@ -50,10 +39,17 @@ let world: p2.World;
 let fruits: Fruit[] = [];
 let markedForDeletion: Fruit[] = [];
 
+// end Line
+let endLineY: number;
+let endLineX: number;
+let endTimeStamp: number | null = null;
+let endGameTimerSeconds = 2;
+
 // Next fruit logic
 var lastMove: TouchEvent | null = null;
 var nextFruit: Fruit | null;
 var touchStart: TouchEvent | null = null;
+let lastMouseX: number | null = null;
 
 function afterPageLoad() {
   canvasWidth = canvas.clientWidth;
@@ -96,12 +92,13 @@ document.addEventListener("touchmove", (event) => {
 });
 
 document.addEventListener("mousemove", (event) => {
+  const rect = canvas.getBoundingClientRect();
+  lastMouseX = event.clientX - rect.left;
   if (nextFruit) {
-    const rect = canvas.getBoundingClientRect();
-    const newPosX = (event.clientX - rect.left - canvasWidth / 2) / scaleX;
+    const newPosX = (lastMouseX - canvasWidth / 2) / scaleX;
     const xLimit = canvasWidth / scaleX / 2;
     if (newPosX > -xLimit && newPosX < xLimit) {
-      nextFruit.x = (event.clientX - rect.left - canvasWidth / 2) / scaleX;
+      nextFruit.x = newPosX;
       nextFruit?.updatePosition();
     }
   }
@@ -122,7 +119,11 @@ function dropFruit() {
     nextFruit.body.wakeUp();
     nextFruit = null;
     setTimeout(() => {
-      nextFruit = createFruit(canvasWidth / 2 + Math.random() * 5, 0);
+      if (lastMouseX) {
+        nextFruit = createFruit(lastMouseX, 0);
+      } else {
+        nextFruit = createFruit(canvasWidth / 2 + Math.random() * 5, 0);
+      }
     }, 500);
   }
 }
@@ -218,6 +219,9 @@ function init() {
   world.defaultContactMaterial.friction = 0.9;
   world.defaultContactMaterial.restitution = 0.25;
 
+  endLineY = -h / scaleY / 2 + h / scaleY / 6;
+  endLineX = w / scaleX / 2;
+
   const y = canvasHeight / 2 / scaleY;
   const x = canvasWidth / 2 / scaleX;
   createPlane(0, y);
@@ -276,6 +280,14 @@ function render() {
     drawPlane(plane);
   });
 
+  // draw end line
+  ctx.beginPath();
+  ctx.strokeStyle = "#E4000F50";
+  ctx.moveTo(-endLineX, endLineY);
+  ctx.lineTo(endLineX, endLineY);
+  ctx.lineWidth = 0.1;
+  ctx.stroke();
+
   // Restore transform
   ctx.restore();
 }
@@ -300,6 +312,8 @@ function animate(time: number) {
     fruit.grow();
   }
 
+  checkEndGame(fruits);
+
   for (let fruit of markedForDeletion) {
     if (fruit.body) {
       world.removeBody(fruit.body);
@@ -309,6 +323,43 @@ function animate(time: number) {
 
   // Render scene
   render();
+}
+
+function checkEndGame(fruits: Fruit[]) {
+  let isOverEndLine = false;
+  fruits.forEach((fruit) => {
+    if (
+      fruit.body &&
+      Math.abs(fruit.body?.velocity[1]) < 0.2 &&
+      fruit !== nextFruit
+    ) {
+      fruit.body?.position[1] > endLineY;
+      if (fruit.body?.position[1] > endLineY) {
+        if (endTimeStamp == null) {
+          document
+            .querySelector<HTMLDivElement>("#gameCanvas")
+            ?.classList.add("app__end");
+          endTimeStamp = Date.now();
+        }
+        isOverEndLine = true;
+      }
+    }
+  });
+
+  // check seconds difference between now and end time
+  if (endTimeStamp) {
+    const seconds = (Date.now() - endTimeStamp) / 1000;
+    if (seconds > endGameTimerSeconds) {
+      reset();
+    }
+  }
+
+  if (!isOverEndLine) {
+    endTimeStamp = null;
+    document
+      .querySelector<HTMLDivElement>("#gameCanvas")
+      ?.classList.remove("app__end");
+  }
 }
 
 function drawFruit(f: Fruit) {
@@ -393,6 +444,7 @@ document
   ?.addEventListener("click", () => reset());
 
 function reset() {
+  endTimeStamp = null;
   for (let fruit of fruits) {
     if (fruit.body && fruit !== nextFruit) {
       markedForDeletion.push(fruit);

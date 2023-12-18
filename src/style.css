@@ -11,9 +11,9 @@
   -webkit-text-size-adjust: 100%;
 
   overflow: hidden;
-
-  
 }
+
+
 
 * {
   touch-action: manipulation;
@@ -111,3 +111,7 @@ button {
   transition: border-color 0.25s;
 }
 
+.app__end{
+  transition: background-color 2s linear;
+  background-color: #E4000F !important;
+}
